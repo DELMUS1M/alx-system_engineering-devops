@@ -1,16 +1,21 @@
 #!/usr/bin/env bash
-# Takes a subdomain and a domain and returns information about the subdomain
-
-print_info () {
-    dig "$1" | grep -A1 'ANSWER SECTION:' | sed -r "s/$1./$2/g" | awk -F" " ' NR==2 { print "The subdomain " $1 " is a " $4 " record and points to " $5 }'
+# Display information of domain and subdomain
+# shellcheck disable=SC2086
+info_Domain () {
+    A=$(dig $2.$1 | awk '/ANSWER SECTION:/{getline;print;}')
+    RE=$(echo $A | cut -d' ' -f 4)
+    IP=$(echo $A | cut -d' ' -f 5)
+    echo "The subdomain $2 is a $RE record and points to $IP"
 }
-
-if [ "$#" -eq 2 ]
+if [ $# -lt 1 ]
 then
-    print_info "$2.$1" "$2"
+    echo "Usage: 1-world_wide_web DOMAIN SUBDOMAIN(optional)"
+elif [ $# -eq 1 ]
+then
+    info_Domain "$1" "www"
+    info_Domain "$1" "lb-01"
+    info_Domain "$1" "web-01"
+    info_Domain "$1" "web-02"
 else
-    print_info "www.$1" "www"
-    print_info "lb-01.$1" "lb-01"
-    print_info "web-01.$1" "web-01"
-    print_info "web-02.$1" "web-02"
+    info_Domain "$1" "$2"
 fi
